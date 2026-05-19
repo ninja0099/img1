@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Vault — ninja0099</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #111111;
+    --surface: #1a1a1a;
+    --surface2: #222222;
+    --border: #2a2a2a;
+    --accent: #e5a00d;
+    --text: #e8e8e8;
+    --text-muted: #888;
+    --text-dim: #555;
+    --sidebar-w: 240px;
+    --radius: 8px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    width: var(--sidebar-w);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .sidebar-header {
+    padding: 20px 16px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .logo svg { flex-shrink: 0; }
+
+  .repo-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .search-wrap {
+    padding: 12px 12px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .search-box {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px 7px 30px;
+    font-size: 12.5px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='7' stroke='%23666' stroke-width='2'/%3E%3Cpath d='m16.5 16.5 4 4' stroke='%23666' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 9px center;
+  }
+
+  .search-box:focus { border-color: var(--accent); }
+  .search-box::placeholder { color: var(--text-dim); }
+
+  .folder-tree {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0 12px;
+  }
+
+  .folder-tree::-webkit-scrollbar { width: 4px; }
+  .folder-tree::-webkit-scrollbar-track { background: transparent; }
+  .folder-tree::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .tree-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 8px 16px 4px;
+  }
+
+  .folder-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px 7px calc(16px + (var(--depth, 0) * 16px));
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-muted);
+    transition: background 0.15s, color 0.15s;
+    user-select: none;
+    border-left: 2px solid transparent;
+  }
+
+  .folder-item:hover { background: var(--surface2); color: var(--text); }
+
+  .folder-item.active {
+    background: rgba(229,160,13,0.08);
+    color: var(--accent);
+    border-left-color: var(--accent);
+    font-weight: 500;
+  }
+
+  .folder-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .folder-count {
+    font-size: 10px;
+    background: var(--surface2);
+    color: var(--text-dim);
+    border-radius: 10px;
+    padding: 1px 6px;
+    font-family: 'DM Mono', monospace;
+    flex-shrink: 0;
+  }
+
+  .folder-item.active .folder-count {
+    background: rgba(229,160,13,0.15);
+    color: var(--accent);
+  }
+
+  .type-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .sidebar-footer {
+    padding: 10px 14px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── MAIN ── */
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .topbar {
+    padding: 16px 24px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    background: var(--bg);
+  }
+
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+
+  .breadcrumb {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .breadcrumb span {
+    color: var(--text-dim);
+    font-weight: 400;
+    font-size: 14px;
+    margin-left: 4px;
+  }
+
+  .type-badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid;
+  }
+
+  .count-pill {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .state-msg {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    gap: 12px;
+    font-size: 14px;
+  }
+
+  #grid-wrap {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px 32px;
+  }
+
+  #grid-wrap::-webkit-scrollbar { width: 6px; }
+  #grid-wrap::-webkit-scrollbar-track { background: transparent; }
+  #grid-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── SUBFOLDER CARDS ── */
+  #subfolder-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+  }
+
+  .subfolder-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 16px;
+    cursor: pointer;
+    transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    animation: fadeUp 0.2s ease both;
+  }
+
+  .subfolder-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--accent);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  .subfolder-card-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .subfolder-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .subfolder-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .subfolder-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .subfolder-badge {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid;
+  }
+
+  .subfolder-count {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── IMAGE GRID ── */
+  #image-grid {
+    column-width: 180px;
+    column-gap: 16px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    break-inside: avoid;
+    margin-bottom: 16px;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    border-color: var(--accent);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  }
+
+  .img-wrap {
+    width: 100%;
+    background: #151515;
+    position: relative;
+  }
+
+  .img-wrap img {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: transform 0.3s;
+  }
+
+  .card:hover .img-wrap img { transform: scale(1.04); }
+
+  .type-tag {
+    position: absolute;
+    top: 7px;
+    left: 7px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 6px;
+    border-radius: 3px;
+    backdrop-filter: blur(6px);
+    background: rgba(0,0,0,0.7);
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    z-index: 2;
+  }
+
+  .type-tag .type-dot { width: 5px; height: 5px; }
+
+  .card-footer {
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+    z-index: 2;
+  }
+
+  .card-name {
+    flex: 1;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .copy-btn {
+    flex-shrink: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+    width: 64px;
+    text-align: center;
+    height: 24px;
+    line-height: 1;
+  }
+
+  .copy-btn:hover { background: var(--accent); color: #111; border-color: var(--accent); }
+  .copy-btn.copied { background: #22c55e; color: #111; border-color: #22c55e; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .card { animation: fadeUp 0.25s ease both; }
+
+  @media (max-width: 640px) {
+    #sidebar {
+      position: fixed;
+      left: -260px;
+      top: 0;
+      height: 100vh;
+      z-index: 100;
+      transition: left 0.25s ease;
+      box-shadow: none;
+    }
+    #sidebar.open {
+      left: 0;
+      box-shadow: 4px 0 24px rgba(0,0,0,0.6);
+    }
+    #overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 99;
+    }
+    #overlay.show { display: block; }
+    #menuBtn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    #image-grid { column-width: 140px; column-gap: 10px; }
+    .card { margin-bottom: 10px; }
+    .topbar { padding: 12px 14px; }
+    #grid-wrap { padding: 14px; }
+  }
+  @media (min-width: 641px) {
+    #menuBtn { display: none; }
+    #overlay  { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="overlay" onclick="closeSidebar()"></div>
+
+<aside id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+        <path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      Image Vault
+    </div>
+    <div class="repo-label">ninja0099 / img1</div>
+  </div>
+
+  <div class="search-wrap">
+    <input class="search-box" id="searchInput" type="text" placeholder="Search images…" autocomplete="off">
+  </div>
+
+  <div class="folder-tree" id="folderTree">
+    <div class="tree-label">Loading…</div>
+  </div>
+
+  <div class="sidebar-footer" id="sidebarFooter">—</div>
+</aside>
+
+<main id="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button id="menuBtn" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <div class="breadcrumb" id="breadcrumb">—</div>
+      <div class="type-badge" id="typeBadge" style="display:none"></div>
+    </div>
+    <div class="topbar-right">
+      <span class="count-pill" id="countPill"></span>
+    </div>
+  </div>
+
+  <div id="grid-wrap">
+    <div class="state-msg" id="stateMsg">
+      <div class="spinner"></div>
+      <div>Loading your collection…</div>
+    </div>
+    <div id="subfolder-grid" style="display:none"></div>
+    <div id="image-grid" style="display:none"></div>
+  </div>
+</main>
+
+<script>
+const USER = 'ninja0099';
+const REPO = 'img1';
+const BASE_URL = `https://${USER}.github.io/${REPO}/`;
+const MANIFEST_URL = `${BASE_URL}manifest.json?v=${Date.now()}`;
+const IMG_EXT = ['.jpg','.jpeg','.png','.gif','.webp','.svg','.avif','.mp4'];
+
+// Mobile sidebar helpers
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+// Detect type from folder name only — never from file extension
+function detectTypeFromFolder(folderPath) {
+  const name = folderPath.split('/').pop().toLowerCase();
+  if (/gif/.test(name)) return 'gif';
+  if (/video|mp4/.test(name)) return 'video';
+  if (/poster|movie|show|series|film/.test(name)) return 'poster';
+  if (/cover/.test(name)) return 'cover';
+  if (/background|bg|fanart/.test(name)) return 'background';
+  if (/logo|brand|icon/.test(name)) return 'logo';
+  if (/banner|header/.test(name)) return 'banner';
+  if (/backdrop/.test(name)) return 'backdrop';
+  return 'other';
+}
+
+// Returns true if this folder has subfolders with images
+function isParentFolder(folder, allFolderKeys) {
+  return allFolderKeys.some(f => f !== folder && f.startsWith(folder + '/'));
+}
+
+const TYPE_META = {
+  poster:     { label: 'Poster',     color: '#e5a00d' },
+  cover:      { label: 'Cover',      color: '#F9FF00' },
+  background: { label: 'Background', color: '#4a9eff' },
+  backdrop:   { label: 'Backdrop',   color: '#36ff51' },
+  logo:       { label: 'Logo',       color: '#a78bfa' },
+  banner:     { label: 'Banner',     color: '#34d399' },
+  gif:        { label: 'GIF',        color: '#ec4899' },
+  video:      { label: 'Video',      color: '#fb923c' },
+  other:      { label: 'Other',      color: '#f87171' },
+};
+
+let allImages = [];
+let folderMap = {};     // exact folder → only its direct images
+let allFolderKeys = []; // all known folder paths sorted
+let activeFolder = null;
+let searchQuery = '';
+
+async function init() {
+  try {
+    const res = await fetch(MANIFEST_URL);
+    if (!res.ok) throw new Error(`manifest.json not found (${res.status})`);
+    const files = await res.json();
+
+    allImages = files
+      .filter(f => IMG_EXT.includes(f.slice(f.lastIndexOf('.')).toLowerCase()))
+      .map(f => {
+        const parts = f.split('/');
+        const name = parts[parts.length - 1];
+        const folder = parts.length > 1 ? parts.slice(0, -1).join('/') : '(root)';
+        const type = detectTypeFromFolder(folder);
+        return { path: f, url: BASE_URL + f, name, folder, type };
+      });
+
+    // folderMap: only direct images per folder (not recursive)
+    folderMap = {};
+    allImages.forEach(img => {
+      if (!folderMap[img.folder]) folderMap[img.folder] = [];
+      folderMap[img.folder].push(img);
+    });
+
+    // Build full folder tree including all intermediate parents
+    const allFolderSet = new Set();
+    allImages.forEach(img => {
+      if (img.folder !== '(root)') {
+        const parts = img.folder.split('/');
+        let current = '';
+        parts.forEach(part => {
+          current = current ? current + '/' + part : part;
+          allFolderSet.add(current);
+        });
+      }
+    });
+    allFolderKeys = Array.from(allFolderSet).sort();
+
+    buildSidebar();
+
+    // Auto-select first top-level folder on load
+    const firstFolder = allFolderKeys[0];
+    if (firstFolder) selectFolder(firstFolder);
+
+    const uniqueFolders = new Set(allImages.map(img => img.folder));
+    document.getElementById('sidebarFooter').textContent =
+      `${allImages.length} images · ${uniqueFolders.size} folders`;
+
+  } catch(e) {
+    const msg = e.message.includes('manifest.json not found')
+      ? '⚠️ manifest.json missing. Run the workflow to generate it.'
+      : '⚠️ Failed to load. Check repo is public &amp; GitHub Pages is enabled.';
+    document.getElementById('stateMsg').innerHTML = `<div>${msg}</div>`;
+    document.getElementById('stateMsg').style.display = 'flex';
+  }
+}
+
+function buildSidebar() {
+  const tree = document.getElementById('folderTree');
+  tree.innerHTML = '';
+
+  const label = document.createElement('div');
+  label.className = 'tree-label';
+  label.textContent = 'Folders';
+  tree.appendChild(label);
+
+  allFolderKeys.forEach(folder => {
+    const depth = folder.split('/').length - 1;
+    const displayName = folder.split('/').pop();
+    const isParent = isParentFolder(folder, allFolderKeys);
+    const count = allImages.filter(img =>
+      img.folder === folder || img.folder.startsWith(folder + '/')
+    ).length;
+
+    if (count === 0) return;
+
+    // Grey dot for parent folders, type color for leaf folders
+    const dotColor = isParent
+      ? '#555'
+      : (TYPE_META[detectTypeFromFolder(folder)]?.color || '#555');
+
+    const el = document.createElement('div');
+    el.className = 'folder-item';
+    el.dataset.key = folder;
+    el.style.setProperty('--depth', depth);
+    el.innerHTML = `
+      <div class="type-dot" style="background:${dotColor}"></div>
+      <span class="folder-name">${displayName}</span>
+      <span class="folder-count">${count}</span>
+    `;
+    el.addEventListener('click', () => selectFolder(folder));
+    tree.appendChild(el);
+  });
+}
+
+function selectFolder(folder) {
+  activeFolder = folder;
+  searchQuery = '';
+  document.getElementById('searchInput').value = '';
+
+  document.querySelectorAll('.folder-item').forEach(i => i.classList.remove('active'));
+  const el = document.querySelector(`.folder-item[data-key="${folder}"]`);
+  if (el) el.classList.add('active');
+
+  renderView();
+}
+
+function renderView() {
+  const stateMsg    = document.getElementById('stateMsg');
+  const subGrid     = document.getElementById('subfolder-grid');
+  const imgGrid     = document.getElementById('image-grid');
+  const breadcrumb  = document.getElementById('breadcrumb');
+  const badge       = document.getElementById('typeBadge');
+  const pill        = document.getElementById('countPill');
+
+  // Reset all panels
+  stateMsg.style.display = 'none';
+  subGrid.style.display  = 'none';
+  imgGrid.style.display  = 'none';
+  subGrid.innerHTML = '';
+  imgGrid.innerHTML = '';
+
+  // ── SEARCH MODE ──
+  if (searchQuery) {
+    const normalise = s => s.toLowerCase().replace(/[-_]/g, ' ');
+    const q = normalise(searchQuery);
+    const results = allImages.filter(i => {
+      const name   = normalise(i.name.replace(/\.[^.]+$/, ''));
+      const folder = normalise(i.folder);
+      return name.includes(q) || folder.includes(q);
+    });
+    breadcrumb.innerHTML = `Search <span>for "${searchQuery}"</span>`;
+    badge.style.display = 'none';
+    pill.textContent = `${results.length} image${results.length !== 1 ? 's' : ''}`;
+
+    if (results.length === 0) {
+      stateMsg.innerHTML = '<div>No images found</div>';
+      stateMsg.style.display = 'flex';
+      return;
+    }
+    imgGrid.style.display = 'block';
+    results
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }))
+      .forEach((img, i) => imgGrid.appendChild(makeImageCard(img, i)));
+    return;
+  }
+
+  if (!activeFolder) return;
+
+  const folderName = activeFolder.split('/').pop();
+  const isParent   = isParentFolder(activeFolder, allFolderKeys);
+  const totalCount = allImages.filter(img =>
+    img.folder === activeFolder || img.folder.startsWith(activeFolder + '/')
+  ).length;
+
+  breadcrumb.innerHTML = folderName;
+  pill.textContent = `${totalCount} image${totalCount !== 1 ? 's' : ''}`;
+
+  // ── PARENT FOLDER → show subfolder cards ──
+  if (isParent) {
+    badge.style.display = 'none';
+
+    // Find only direct children of this folder
+    const activeParts = activeFolder.split('/');
+    const children = allFolderKeys.filter(f => {
+      const parts = f.split('/');
+      return (
+        parts.length === activeParts.length + 1 &&
+        f.startsWith(activeFolder + '/')
+      );
+    });
+
+    subGrid.style.display = 'grid';
+    children.forEach((child, i) => {
+      const childName     = child.split('/').pop();
+      const childIsParent = isParentFolder(child, allFolderKeys);
+      const childCount    = allImages.filter(img =>
+        img.folder === child || img.folder.startsWith(child + '/')
+      ).length;
+      const childType  = detectTypeFromFolder(child);
+      const childMeta  = TYPE_META[childType] || TYPE_META['other'];
+      const dotColor   = childIsParent ? '#555' : childMeta.color;
+
+      const card = document.createElement('div');
+      card.className = 'subfolder-card';
+      card.style.animationDelay = `${i * 0.05}s`;
+      card.innerHTML = `
+        <div class="subfolder-card-top">
+          <div class="subfolder-dot" style="background:${dotColor}"></div>
+          <div class="subfolder-name">${childName}</div>
+        </div>
+        <div class="subfolder-meta">
+          ${!childIsParent
+            ? `<div class="subfolder-badge"
+                style="color:${childMeta.color};border-color:${childMeta.color}55;background:${childMeta.color}15">
+                ${childMeta.label}
+               </div>`
+            : '<div></div>'}
+          <div class="subfolder-count">${childCount} imgs</div>
+        </div>
+      `;
+      card.addEventListener('click', () => selectFolder(child));
+      subGrid.appendChild(card);
+    });
+
+  // ── LEAF FOLDER → show images ──
+  } else {
+    const imgs = (folderMap[activeFolder] || [])
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+    const type = detectTypeFromFolder(activeFolder);
+    const meta = TYPE_META[type] || TYPE_META['other'];
+
+    // Badge only for leaf folders
+    badge.textContent         = meta.label;
+    badge.style.display       = 'inline-block';
+    badge.style.color         = meta.color;
+    badge.style.borderColor   = meta.color + '55';
+    badge.style.background    = meta.color + '15';
+
+    if (imgs.length === 0) {
+      stateMsg.innerHTML = '<div>No images in this folder</div>';
+      stateMsg.style.display = 'flex';
+      return;
+    }
+
+    imgGrid.style.display = 'block';
+    imgs.forEach((img, i) => imgGrid.appendChild(makeImageCard(img, i)));
+  }
+}
+
+function makeImageCard(img, i) {
+  const meta = TYPE_META[img.type] || TYPE_META['other'];
+  const card = document.createElement('div');
+  card.className = `card type-${img.type}`;
+  card.style.animationDelay = `${Math.min(i * 0.03, 0.5)}s`;
+  const isVideo = img.name.toLowerCase().endsWith('.mp4');
+
+  card.innerHTML = `
+    <div class="img-wrap">
+      ${isVideo
+        ? `<div style="width:100%;min-height:120px;background:#0d0d0d;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+             <svg width="40" height="40" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)"><path d="M8 5v14l11-7z"/></svg>
+           </div>`
+        : `<img src="${img.url}" alt="${img.name}" loading="lazy"
+             onerror="this.parentElement.style.background='#1e1e1e';this.style.display='none'">`
+      }
+      <div class="type-tag" style="color:${meta.color}">
+        <div class="type-dot" style="background:${meta.color}"></div>
+        ${meta.label}
+      </div>
+    </div>
+    <div class="card-footer">
+      <div class="card-name" title="${img.name}">${img.name.replace(/\.[^.]+$/, '')}</div>
+      <button class="copy-btn" data-url="${img.url}">Copy</button>
+    </div>
+  `;
+
+  card.addEventListener('click', (e) => {
+    if (e.target.closest('.card-footer')) return;
+    window.open(img.url, '_blank');
+  });
+
+  card.querySelector('.copy-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const btn = e.currentTarget;
+    navigator.clipboard.writeText(btn.dataset.url).then(() => {
+      btn.textContent = 'Copied';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    }).catch(() => {
+      btn.textContent = 'Failed';
+      setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+    });
+  });
+
+  return card;
+}
+
+// Search
+document.getElementById('searchInput').addEventListener('input', e => {
+  searchQuery = e.target.value.trim();
+  if (!searchQuery) {
+    document.querySelectorAll('.folder-item').forEach(i => i.classList.remove('active'));
+    document.querySelector(`.folder-item[data-key="${activeFolder}"]`)?.classList.add('active');
+  } else {
+    document.querySelectorAll('.folder-item').forEach(i => i.classList.remove('active'));
+  }
+  renderView();
+});
+
+init();
+</script>
+</body>
+</html>

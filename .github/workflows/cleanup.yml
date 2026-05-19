@@ -1,0 +1,28 @@
+name: Squash and Wipe History
+
+on:
+  schedule:
+    - cron: "0 0 2 * *" 
+  workflow_dispatch: 
+
+jobs:
+  squash-history:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # <-- ADDED: Ensures the bot has permission to push
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+          
+      - name: Squash all commits to wipe bloat
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Create an orphan branch, add everything, and force push it over main
+          git checkout --orphan temp_branch
+          git add -A
+          git commit -m "chore: automated history wipe to save space"
+          git branch -M main
+          git push -f origin main

@@ -1,0 +1,44 @@
+name: Update Manifest
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**.jpg'
+      - '**.jpeg'
+      - '**.png'
+      - '**.gif'
+      - '**.webp'
+      - '**.svg'
+      - '**.avif'
+      - '**.mp4'
+
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Generate manifest.json
+        run: |
+          find . -type f \( -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" -o -name "*.gif" -o -name "*.webp" -o -name "*.svg" -o -name "*.avif" -o -name "*.mp4" \) \
+            -not -path "./.git/*" \
+            -not -path "./scripts/*" \
+            | sed 's|^\./||' \
+            | sort \
+            | python3 -c "import sys,json; files=[l.strip() for l in sys.stdin if l.strip()]; print(json.dumps(files,indent=2))" \
+            > manifest.json
+
+      - name: Commit manifest
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add manifest.json
+          git diff --staged --quiet || git commit -m "chore: update manifest [$(date -u '+%Y-%m-%d')]"
+          git push

@@ -1,0 +1,484 @@
+[
+  {
+    "name":   "netflix",
+    "label":  "Netflix",
+    "logo":   "streaming/logo/Netflix.webp",
+    "output": "streaming/backdrop/netflix.webp",
+    "focus":  "center-right",
+    "count":  50,
+    "fanart": true,
+    "sources": [
+      "movie:sort_by=popularity.desc&watch_region=IN&with_watch_providers=8",
+      "tv:sort_by=popularity.desc&watch_region=IN&with_watch_providers=8"
+    ]
+  },
+  {
+    "name":   "prime",
+    "label":  "Prime Video",
+    "logo":   "streaming/logo/Prime.webp",
+    "output": "streaming/backdrop/prime.webp",
+    "focus":  "center-right",
+    "count":  50,
+    "fanart": true,
+    "sources": [
+      "movie:sort_by=popularity.desc&watch_region=IN&with_watch_providers=119",
+      "tv:sort_by=popularity.desc&watch_region=IN&with_watch_providers=119"
+    ]
+  },
+  {
+    "name":   "disney",
+    "label":  "Disney+",
+    "logo":   "streaming/logo/Disney.webp",
+    "output": "streaming/backdrop/disney.webp",
+    "focus":  "center-right",
+    "count":  50,
+    "fanart": true,
+    "sources": [
+      "movie:sort_by=popularity.desc&watch_region=US&with_watch_providers=337",
+      "tv:sort_by=popularity.desc&watch_region=US&with_watch_providers=337"
+    ]
+  },
+  {
+    "name":   "apple-tv",
+    "label":  "Apple TV+",
+    "logo":   "streaming/logo/Apple-TV.webp",
+    "output": "streaming/backdrop/apple-tv.webp",
+    "focus":  "center-right",
+    "count":  50,
+    "fanart": true,
+    "sources": [
+      "movie:sort_by=popularity.desc&watch_region=US&with_watch_providers=350",
+      "tv:sort_by=popularity.desc&watch_region=US&with_watch_providers=350"
+    ]
+  },
+  {
+    "name":   "hbo-max",
+    "label":  "HBO Max",
+    "logo":   "streaming/logo/HBO-max.webp",
+    "output": "streaming/backdrop/hbo-max.webp",
+    "focus":  "center-right",
+    "count":  50,
+    "fanart": true,
+    "sources": [
+      "movie:sort_by=popularity.desc&watch_region=US&with_watch_providers=1899",
+      "tv:sort_by=popularity.desc&watch_region=US&with_watch_providers=1899"
+    ]
+  },
+  {
+    "name":   "paramount",
+    "label":  "Paramount+",
+    "logo":   "streaming/logo/Paramount.webp",
+    "output": "streaming/backdrop/paramount.webp",
+    "focus":  "center-right",
+    "count":  50,
+    "fanart": true,
+    "sources": [
+      "movie:sort_by=popularity.desc&watch_region=US&with_watch_providers=2303|2616|582|633",
+      "tv:sort_by=popularity.desc&watch_region=US&with_watch_providers=2303|2616|582|633|1853"
+    ]
+  },
+  {
+    "name":   "peacock",
+    "label":  "Peacock",
+    "logo":   "streaming/logo/Peacock-white-text.webp",
+    "output": "streaming/backdrop/peacock.webp",
+    "focus":  "center-right",
+    "count":  50,
+    "fanart": true,
+    "sources": [
+      "movie:sort_by=popularity.desc&watch_region=US&with_watch_providers=386|387",
+      "tv:sort_by=popularity.desc&watch_region=US&with_watch_providers=386|387"
+    ]
+  },
+  {
+    "name":   "crunchyroll",
+    "label":  "Crunchyroll",
+    "logo":   "streaming/logo/Crunchyroll.webp",
+    "output": "streaming/backdrop/crunchyroll.webp",
+    "focus":  "center-right",
+    "count":  50,
+    "fanart": true,
+    "sources": [
+      "movie:sort_by=popularity.desc&watch_region=US&with_watch_providers=283|1968",
+      "tv:sort_by=popularity.desc&watch_region=US&with_watch_providers=283|1968"
+    ]
+  },
+  {
+    "name":   "discovery",
+    "label":  "Discovery+",
+    "logo":   "streaming/logo/Discovery.webp",
+    "output": "streaming/backdrop/discovery.webp",
+    "focus":  "center-right",
+    "count":  50,
+    "fanart": true,
+    "sources": [
+      "movie:sort_by=popularity.desc&watch_region=US&with_watch_providers=520|584",
+      "tv:sort_by=popularity.desc&watch_region=US&with_watch_providers=520|584"
+    ]
+  },
+  {
+    "name":   "hulu",
+    "label":  "Hulu",
+    "logo":   "streaming/logo/Hulu.webp",
+    "output": "streaming/backdrop/Hulu.webp",
+    "focus":  "center-right",
+    "count":  50,
+    "fanart": true,
+    "sources": [
+      "movie:sort_by=popularity.desc&watch_region=US&with_watch_providers=15",
+      "tv:sort_by=popularity.desc&watch_region=US&with_watch_providers=15"
+    ]
+  },
+  {
+    "name":        "Anime",
+    "label":       "Anime",
+    "logo":        "Genre/Apple-TV-Genres/anime.webp",
+    "output":      "Genre/backdrop/Anime.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["snoak/trending-anime-shows"],
+    "sort":        ""
+  },
+  {
+    "name":        "Action",
+    "label":       "Action",
+    "logo":        "Genre/Apple-TV-Genres/action.webp",
+    "output":      "Genre/backdrop/Action.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["snoak/action-movies", "snoak/action-shows"],
+    "sort":        ""
+  },
+  {
+    "name":        "Comedy",
+    "label":       "Comedy",
+    "logo":        "Genre/Apple-TV-Genres/comedy.webp",
+    "output":      "Genre/backdrop/Comedy.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["snoak/comedy-movies", "snoak/comedy-shows"],
+    "sort":        ""
+  },
+  {
+    "name":        "Scifi",
+    "label":       "Scifi",
+    "logo":        "Genre/Apple-TV-Genres/sci-fi.webp",
+    "output":      "Genre/backdrop/Scifi.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["snoak/science-fiction-movies", "snoak/science-fiction-shows"],
+    "sort":        ""
+  },
+  {
+    "name":        "Crime",
+    "label":       "Crime",
+    "logo":        "Genre/Apple-TV-Genres/crime.webp",
+    "output":      "Genre/backdrop/Crime.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["snoak/popular-crime-movies", "snoak/popular-crime-shows"],
+    "sort":        ""
+  },
+  {
+    "name":        "thriller",
+    "label":       "Thriller",
+    "logo":        "Genre/Apple-TV-Genres/thriller.webp",
+    "output":      "Genre/backdrop/thriller.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["snoak/thriller-movies", "snoak/thriller-shows"],
+    "sort":        ""
+  },
+  {
+    "name":        "Drama",
+    "label":       "Drama",
+    "logo":        "Genre/Apple-TV-Genres/drama.webp",
+    "output":      "Genre/backdrop/Drama.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["snoak/drama-movies", "snoak/drama-shows"],
+    "sort":        ""
+  },
+  {
+    "name":        "Horror",
+    "label":       "Horror",
+    "logo":        "Genre/Apple-TV-Genres/horror.webp",
+    "output":      "Genre/backdrop/Horror.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["snoak/horror-movies", "snoak/horror-shows"],
+    "sort":        ""
+  },
+  {
+    "name":        "Mystery",
+    "label":       "Mystery",
+    "logo":        "Genre/Apple-TV-Genres/mystery.webp",
+    "output":      "Genre/backdrop/Mystery.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["hdlists/latest-hd-mystery-movies-top-rated-from-1980-to-today"],
+    "sort":        ""
+  },
+  {
+    "name":        "Romance",
+    "label":       "Romance",
+    "logo":        "Genre/Apple-TV-Genres/romance.webp",
+    "output":      "Genre/backdrop/Romance.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["snoak/popular-romance-movies", "snoak/popular-romance-shows"],
+    "sort":        ""
+  },
+  {
+    "name":        "Documentary",
+    "label":       "Documentary",
+    "logo":        "Genre/Apple-TV-Genres/documentary.webp",
+    "output":      "Genre/backdrop/Documentary.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["snoak/popular-documentary-movies", "snoak/popular-documentary-shows"],
+    "sort":        ""
+  },
+  {
+    "name":        "animation",
+    "label":       "animation",
+    "logo":        "Genre/Apple-TV-Genres/animation.webp",
+    "output":      "Genre/backdrop/animation.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["snoak/popular-animated-movies", "snoak/popular-animated-shows"],
+    "sort":        ""
+  },
+  {
+    "name":        "Adventure",
+    "label":       "Adventure",
+    "logo":        "Genre/Apple-TV-Genres/adventure.webp",
+    "output":      "Genre/backdrop/adventure.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["nobnobz/genre-adventure"],
+    "sort":        ""
+  },
+  {
+    "name":        "war",
+    "label":       "war",
+    "logo":        "Genre/Apple-TV-Genres/war-stories.webp",
+    "output":      "Genre/backdrop/war-stories.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["garycrawfordgc/war"],
+    "sort":        ""
+  },
+  {
+    "name":        "music",
+    "label":       "music",
+    "logo":        "Genre/Apple-TV-Genres/music.webp",
+    "output":      "Genre/backdrop/music.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["czer323/live-concerts-music"],
+    "sort":        ""
+  },
+  {
+    "name":        "superheroes",
+    "label":       "superheroes",
+    "logo":        "Genre/Apple-TV-Genres/superheroes.webp",
+    "output":      "Genre/backdrop/superheroes.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["hdlists/latest-hd-superhero-movies-from-1980-to-today"],
+    "sort":        ""
+  },
+  {
+    "name":        "Christopher Nolan",
+    "label":       "Christopher Nolan",
+    "logo":        "Directors/cover/Christopher-Nolan.webp",
+    "output":      "Directors/backdrop/Christopher-Nolan.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["nobnobz/director-christopher-nolan"],
+    "sort":        ""
+  },
+  {
+    "name":        "Martin-Scorsese",
+    "label":       "Martin-Scorsese",
+    "logo":        "Directors/cover/Martin-Scorsese.webp",
+    "output":      "Directors/backdrop/Martin-Scorsese.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["nobnobz/director-martin-scorsese"],
+    "sort":        ""
+  },
+  {
+    "name":        "David-Fincher",
+    "label":       "David-Fincher",
+    "logo":        "Directors/cover/David-Fincher.webp",
+    "output":      "Directors/backdrop/David-Fincher.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["nobnobz/director-david-fincher"],
+    "sort":        ""
+  },
+  {
+    "name":        "quentin-tarantino",
+    "label":       "quentin-tarantino",
+    "logo":        "Directors/cover/quentin-tarantino.webp",
+    "output":      "Directors/backdrop/quentin-tarantino.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["nobnobz/director-quentin-tarantino-oyiygkmpse"],
+    "sort":        ""
+  },
+  {
+    "name":        "Stanley-Kubrick",
+    "label":       "Stanley-Kubrick",
+    "logo":        "Directors/cover/Stanley-Kubrick.webp",
+    "output":      "Directors/backdrop/Stanley-Kubrick.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["nobnobz/director-stanley-kubrick"],
+    "sort":        ""
+  },
+  {
+    "name":        "Denis-Villeneuve",
+    "label":       "Denis-Villeneuve",
+    "logo":        "Directors/cover/Denis-Villeneuve.webp",
+    "output":      "Directors/backdrop/Denis-Villeneuve.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["nobnobz/director-denis-villeneuve-uemmy6rvr5"],
+    "sort":        ""
+  },
+  {
+    "name":        "Wes-Anderson",
+    "label":       "Wes-Anderson",
+    "logo":        "Directors/cover/Wes-Anderson.webp",
+    "output":      "Directors/backdrop/Wes-Anderson.webp",
+    "focus":       "center-right",
+    "count":       60,
+    "fanart":      true,
+    "mdblist_url": ["nobnobz/director-wes-anderson"],
+    "sort":        ""
+  },
+  {
+    "name":        "Steven-Spielberg",
+    "label":       "Steven-Spielberg",
+    "logo":        "Directors/cover/Steven-Spielberg.webp",
+    "output":      "Directors/backdrop/Steven-Spielberg.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["nobnobz/director-steven-spielberg-gz6ayujtba"],
+    "sort":        ""
+  },
+  {
+    "name":        "Ridley-Scott",
+    "label":       "Ridley-Scott",
+    "logo":        "Directors/cover/Ridley-Scott.webp",
+    "output":      "Directors/backdrop/Ridley-Scott.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["nobnobz/director-ridley-scott-ldcby6pn2g"],
+    "sort":        ""
+  },
+  {
+    "name":        "1960s",
+    "label":       "1960s",
+    "logo":        "Decades/cover/1960s.webp",
+    "output":      "Decades/backdrop/1960s.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["snoak/popular-1960s-movies"],
+    "sort":        ""
+  },
+  {
+    "name":        "1970s",
+    "label":       "1970s",
+    "logo":        "Decades/cover/1970s.webp",
+    "output":      "Decades/backdrop/1970s.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["snoak/popular-1970s-movies", "ryankeast/tv-shows-decades-1970s-gspag9q78u"],
+    "sort":        ""
+  },
+  {
+    "name":        "1980s",
+    "label":       "1980s",
+    "logo":        "Decades/cover/1980s.webp",
+    "output":      "Decades/backdrop/1980s.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["snoak/top-1980s-movies", "ryankeast/tv-shows-decades-1980s-udm1n22fgu"],
+    "sort":        ""
+  },
+  {
+    "name":        "1990s",
+    "label":       "1990s",
+    "logo":        "Decades/cover/1990s.webp",
+    "output":      "Decades/backdrop/1990s.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["snoak/top-1990s-movies", "ryankeast/tv-shows-decades-1990s-wk2af5s2c0"],
+    "sort":        ""
+  },
+  {
+    "name":        "2000s",
+    "label":       "2000s",
+    "logo":        "Decades/cover/2000s.webp",
+    "output":      "Decades/backdrop/2000s.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["snoak/top-2000s-movies", "ryankeast/tv-shows-decades-2000s-oquqd7j6ws"],
+    "sort":        ""
+  },
+  {
+    "name":        "2010s",
+    "label":       "2010s",
+    "logo":        "Decades/cover/2010s.webp",
+    "output":      "Decades/backdrop/2010s.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["snoak/top-2010s-movies", "ryankeast/tv-shows-decades-2010s-p3b49wwmux"],
+    "sort":        ""
+  },
+  {
+    "name":        "2020s",
+    "label":       "2020s",
+    "logo":        "Decades/cover/2020s.webp",
+    "output":      "Decades/backdrop/2020s.webp",
+    "focus":       "center-right",
+    "count":       50,
+    "fanart":      true,
+    "mdblist_url": ["snoak/top-2020s-movies", "ryankeast/tv-shows-decades-2020s-fexjkmd07m"],
+    "sort":        ""
+  }
+]

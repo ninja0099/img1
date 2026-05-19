@@ -1,0 +1,55 @@
+name: Generate Backdrops
+
+# Runs 1st of every month at midnight UTC
+# Can also be triggered manually from the Actions tab anytime
+on:
+  schedule:
+    - cron: "0 0 1 * *"
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests Pillow numpy
+
+      - name: Run generate.py
+        env:
+          TMDB_API_KEY:    ${{ secrets.TMDB_API_KEY }}
+          FANART_API_KEY:  ${{ secrets.FANART_API_KEY }}
+          MDBLIST_API_KEY: ${{ secrets.MDBLIST_API_KEY }}
+        run: python3 scripts/generate.py
+
+      - name: Generate manifest.json
+        if: always()
+        run: |
+          find . -type f \( -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" -o -name "*.gif" -o -name "*.webp" -o -name "*.svg" -o -name "*.avif" -o -name "*.mp4" \) \
+            -not -path "./.git/*" \
+            -not -path "./scripts/*" \
+            | sed 's|^\./||' \
+            | sort \
+            | python3 -c "import sys,json; files=[l.strip() for l in sys.stdin if l.strip()]; print(json.dumps(files,indent=2))" \
+            > manifest.json
+
+      - name: Commit updated backdrops
+        if: always()
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --staged --quiet || git commit -m "chore: regenerate backdrops [$(date -u '+%Y-%m-%d')]"
+          git push
