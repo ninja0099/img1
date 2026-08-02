@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Vault — ninja0099</title>
+<link rel="icon" type="image/x-icon" href="icon.png">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<script>
+	function timeAgo(isoString) {
+	  const diff = Math.floor((Date.now() - new Date(isoString).getTime()) / 1000);
+	  if (diff < 60) return 'just now';
+	  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+	  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+	  if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+	  return new Date(isoString).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+	}
+
+	function renderStats(images, updatedAt) {
+	  const uniqueFolders = new Set(images.map(img => img.folder));
+	  const totalEl = document.getElementById('statsTotalImages');
+	  const updatedEl = document.getElementById('statsUpdated');
+	  const foldersEl = document.getElementById('statsFolders');
+	  const typesEl = document.getElementById('statsTypes');
+	  if (!totalEl) return;
+	  totalEl.innerHTML = '<strong>' + images.length + '</strong> images';
+	  if (foldersEl) foldersEl.textContent = uniqueFolders.size + ' folder' + (uniqueFolders.size !== 1 ? 's' : '');
+	  if (updatedEl) updatedEl.textContent = updatedAt ? timeAgo(updatedAt) : '—';
+	  if (!typesEl) return;
+	  typesEl.innerHTML = '';
+	  const counts = {};
+	  images.forEach(img => { counts[img.type] = (counts[img.type] || 0) + 1; });
+	  Object.entries(TYPE_META).forEach(([key, meta]) => {
+		if (!counts[key]) return;
+		const row = document.createElement('div');
+		row.className = 'stats-type-row';
+		row.innerHTML = '<div class="type-dot" style="background:' + meta.color + '"></div>'
+		  + '<div class="stats-type-label">' + meta.label + '</div>'
+		  + '<div class="stats-type-count" style="color:' + meta.color + '">' + counts[key] + '</div>';
+		typesEl.appendChild(row);
+	  });
+	}
+
+</script>
+<style>
+  :root {
+    --bg: #111111;
+    --surface: #1a1a1a;
+    --surface2: #222222;
+    --border: #2a2a2a;
+    --accent: #e5a00d;
+    --accent2: #f97316;
+    --text: #e8e8e8;
+    --text-muted: #888;
+    --text-dim: #555;
+    --sidebar-w: 240px;
+    --radius: 8px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    width: var(--sidebar-w);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .sidebar-header {
+    padding: 20px 16px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .logo svg { flex-shrink: 0; }
+
+  .repo-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .repo-switcher {
+    display: flex;
+    gap: 5px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  .repo-btn {
+    font-size: 10.5px;
+    font-family: 'DM Mono', monospace;
+    padding: 3px 9px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+
+  .repo-btn:hover {
+    color: var(--text);
+    border-color: #444;
+  }
+
+  .repo-btn.active {
+    background: rgba(229,160,13,0.12);
+    border-color: rgba(229,160,13,0.5);
+    color: var(--accent);
+  }
+
+  .search-wrap {
+    padding: 12px 12px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .search-box {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px 7px 30px;
+    font-size: 12.5px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='7' stroke='%23666' stroke-width='2'/%3E%3Cpath d='m16.5 16.5 4 4' stroke='%23666' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 9px center;
+  }
+
+  .search-box:focus { border-color: var(--accent); }
+  .search-box::placeholder { color: var(--text-dim); }
+
+  .folder-tree {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0 12px;
+  }
+
+  .folder-tree::-webkit-scrollbar { width: 4px; }
+  .folder-tree::-webkit-scrollbar-track { background: transparent; }
+  .folder-tree::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .tree-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 8px 16px 4px;
+  }
+
+  .folder-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px 7px calc(16px + (var(--depth, 0) * 16px));
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-muted);
+    transition: background 0.2s ease, color 0.2s ease;
+    user-select: none;
+    border-left: 2px solid transparent;
+  }
+
+  .folder-item:hover { background: var(--surface2); color: var(--text); }
+
+  .folder-item.active {
+    background: linear-gradient(90deg, rgba(229,160,13,0.12), rgba(249,115,22,0.04));
+    color: var(--accent);
+    border-left-color: var(--accent);
+    font-weight: 500;
+  }
+
+  .folder-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .folder-count {
+    font-size: 10px;
+    background: var(--surface2);
+    color: var(--text-dim);
+    border-radius: 10px;
+    padding: 1px 6px;
+    font-family: 'DM Mono', monospace;
+    flex-shrink: 0;
+  }
+
+  .folder-item.active .folder-count {
+    background: rgba(229,160,13,0.15);
+    color: var(--accent);
+  }
+
+  .type-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── GUIDE SIDEBAR ITEM ── */
+  .guide-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 12px;
+  }
+
+  .guide-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px 7px 16px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-muted);
+    transition: background 0.2s ease, color 0.2s ease;
+    user-select: none;
+    border-left: 2px solid transparent;
+    margin-bottom: 4px;
+  }
+
+  .guide-btn:hover { background: var(--surface2); color: var(--text); }
+
+  .guide-btn.active {
+    background: rgba(229,160,13,0.08);
+    color: var(--accent);
+    border-left-color: var(--accent);
+    font-weight: 500;
+  }
+
+  .sidebar-footer {
+    padding: 10px 14px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── MAIN ── */
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .topbar {
+    padding: 16px 24px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    background: var(--bg);
+  }
+
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+
+  .breadcrumb {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .breadcrumb span {
+    color: var(--text-dim);
+    font-weight: 400;
+    font-size: 14px;
+    margin-left: 4px;
+  }
+
+  .type-badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid;
+  }
+
+  .count-pill {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .state-msg {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    gap: 12px;
+    font-size: 14px;
+  }
+
+  #grid-wrap {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px 32px;
+  }
+
+  #grid-wrap::-webkit-scrollbar { width: 6px; }
+  #grid-wrap::-webkit-scrollbar-track { background: transparent; }
+  #grid-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── SUBFOLDER CARDS ── */
+  #subfolder-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+  }
+
+  .subfolder-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 16px;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .subfolder-card:hover {
+    border-color: rgba(229,160,13,0.5);
+  }
+
+  .subfolder-card-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .subfolder-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .subfolder-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .subfolder-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .subfolder-badge {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid;
+  }
+
+  .subfolder-count {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── IMAGE GRID ── */
+  #image-grid {
+    column-width: 180px;
+    column-gap: 16px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    break-inside: avoid;
+    margin-bottom: 16px;
+  }
+
+  .card:hover {
+    border-color: rgba(229,160,13,0.6);
+  }
+
+  .img-wrap {
+    width: 100%;
+    background: #151515;
+    position: relative;
+  }
+
+  .img-wrap img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  @media (hover: hover) {
+    .card:hover .img-wrap img { transform: scale(1.04); transition: transform 0.15s ease; }
+  }
+
+  .type-tag {
+    position: absolute;
+    top: 7px;
+    left: 7px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 6px;
+    border-radius: 3px;
+    background: rgba(0,0,0,0.82);
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    z-index: 2;
+  }
+
+  .type-tag .type-dot { width: 5px; height: 5px; }
+
+  .card-footer {
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+    z-index: 2;
+  }
+
+  .card-name {
+    flex: 1;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .copy-btn {
+    flex-shrink: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
+    width: 64px;
+    text-align: center;
+    height: 24px;
+    line-height: 1;
+  }
+
+  .copy-btn:hover { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #111; border-color: var(--accent); }
+  .copy-btn.copied { background: #22c55e; color: #111; border-color: #22c55e; }
+
+  /* ── JSON GRID ── */
+  #json-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+  }
+
+  .json-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: default;
+    transition: border-color 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    animation: fadeIn 0.15s ease both;
+  }
+
+  .json-card:hover {
+    border-color: rgba(56,189,248,0.5);
+  }
+
+  .json-card-body {
+    padding: 18px 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+  }
+
+  .json-card-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .json-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: rgba(56,189,248,0.1);
+    border: 1px solid rgba(56,189,248,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #38bdf8;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+  }
+
+  .json-card-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .json-card-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .json-card-tag {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: rgba(56,189,248,0.1);
+    border: 1px solid rgba(56,189,248,0.25);
+    color: #38bdf8;
+  }
+
+  .json-card-footer {
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .json-view-btn {
+    flex-shrink: 0;
+    background: rgba(56,189,248,0.08);
+    border: 1px solid rgba(56,189,248,0.25);
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #38bdf8;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
+    width: 52px;
+    text-align: center;
+    height: 24px;
+    line-height: 1;
+    transition: background 0.15s ease;
+  }
+
+  .json-view-btn:hover {
+    background: rgba(56,189,248,0.2);
+    border-color: rgba(56,189,248,0.5);
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  .card { animation: fadeIn 0.15s ease both; }
+
+  /* ── GUIDE PANEL ── */
+  #guide-panel {
+    padding: 32px 40px 60px;
+    max-width: 860px;
+    animation: fadeIn 0.15s ease both;
+  }
+
+  #guide-panel h1 { font-size: 24px; font-weight: 600; color: var(--text); margin-bottom: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  #guide-panel h2 { font-size: 16px; font-weight: 600; color: var(--text); margin: 28px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  #guide-panel h3 { font-size: 14px; font-weight: 600; color: var(--text); margin: 20px 0 8px; }
+  #guide-panel p { font-size: 13.5px; color: var(--text-muted); line-height: 1.7; margin-bottom: 12px; }
+  #guide-panel a { color: var(--accent); text-decoration: none; }
+  #guide-panel a:hover { text-decoration: underline; }
+  #guide-panel code { font-family: 'DM Mono', monospace; font-size: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; color: #e2a44a; }
+  #guide-panel pre { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; overflow-x: auto; margin: 12px 0; }
+  #guide-panel pre code { background: none; border: none; padding: 0; color: #c9d1d9; font-size: 12.5px; line-height: 1.6; }
+  #guide-panel table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  #guide-panel th { background: var(--surface2); color: var(--text); font-weight: 600; padding: 8px 12px; text-align: left; border: 1px solid var(--border); }
+  #guide-panel td { padding: 7px 12px; border: 1px solid var(--border); color: var(--text-muted); vertical-align: top; }
+  #guide-panel tr:hover td { background: var(--surface2); }
+  #guide-panel blockquote { border-left: 3px solid var(--accent); padding: 8px 16px; margin: 12px 0; background: rgba(229,160,13,0.06); border-radius: 0 var(--radius) var(--radius) 0; color: var(--text-muted); font-size: 13.5px; }
+  #guide-panel ul, #guide-panel ol { padding-left: 20px; margin-bottom: 12px; color: var(--text-muted); font-size: 13.5px; line-height: 1.7; }
+  #guide-panel hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+  #guide-panel details { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; margin: 8px 0; }
+  #guide-panel summary { cursor: pointer; color: var(--text); font-size: 13.5px; font-weight: 500; }
+  #guide-panel details[open] summary { margin-bottom: 12px; }
+
+  /* ── ACCESSIBILITY: prefers-reduced-motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  @media (max-width: 640px) {
+    #sidebar {
+      position: fixed;
+      left: -260px;
+      top: 0;
+      height: 100vh;
+      height: 100dvh;
+      z-index: 100;
+      transition: left 0.25s ease;
+      box-shadow: none;
+    }
+    #sidebar.open {
+      left: 0;
+      box-shadow: 4px 0 24px rgba(0,0,0,0.6);
+    }
+    #overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 99;
+    }
+    #overlay.show { display: block; }
+    #menuBtn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    #image-grid {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      columns: unset !important;
+    }
+    #image-grid .card {
+      margin-bottom: 0 !important;
+      break-inside: unset;
+      width: 100% !important;
+    }
+    #json-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .card { margin-bottom: 0; }
+    .topbar { padding: 12px 14px; }
+    #grid-wrap { padding: 13px 13px 80px; }
+    #guide-panel { padding: 20px 16px 80px; }
+    #guide-panel table { font-size: 11px; }
+    #guide-panel th, #guide-panel td { padding: 5px 8px; }
+  }
+  @media (min-width: 641px) {
+    #menuBtn { display: none; }
+    #overlay  { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="overlay" onclick="closeSidebar()"></div>
+
+<aside id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+        <path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      Image Vault
+    </div>
+    <div class="repo-switcher" id="repoSwitcher"></div>
+  </div>
+
+  <div class="search-wrap">
+    <div style="position:relative;display:block;">
+      <input class="search-box" id="searchInput" type="text" placeholder="Search images…" autocomplete="off" style="padding-right:26px">
+      <button id="searchClear" aria-label="Clear search" style="
+        display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);
+        background:none;border:none;cursor:pointer;color:var(--text-dim);
+        font-size:11px;line-height:1;padding:0;width:16px;height:16px;
+        align-items:center;justify-content:center;
+        transition:color 0.15s ease;
+      " onmouseenter="this.style.color='var(--text)'" onmouseleave="this.style.color='var(--text-dim)'">✕</button>
+    </div>
+  </div>
+
+  <div class="folder-tree" id="folderTree">
+    <div class="tree-label">Loading…</div>
+  </div>
+
+  <div class="guide-divider"></div>
+  <div class="guide-btn" id="guideBtn" onclick="showGuide()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+      <path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <span class="folder-name">Guide</span>
+  </div>
+
+  <div class="sidebar-footer" id="sidebarFooter">
+    <div class="stats-top">
+      <div class="stats-top-row">
+        <div class="stats-total" id="statsTotalImages">—</div>
+        <div class="stats-updated" id="statsUpdated">—</div>
+      </div>
+      <div class="stats-folders-row" id="statsFolders">—</div>
+    </div>
+    <div class="stats-types" id="statsTypes"></div>
+  </div>
+</aside>
+
+<main id="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button id="menuBtn" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <div class="breadcrumb" id="breadcrumb">—</div>
+      <div class="type-badge" id="typeBadge" style="display:none"></div>
+    </div>
+    <div class="topbar-right">
+      <span class="count-pill" id="countPill"></span>
+    </div>
+  </div>
+
+  <div id="grid-wrap">
+    <div class="state-msg" id="stateMsg">
+      <div class="spinner"></div>
+      <div>Loading your collection…</div>
+    </div>
+    <div id="subfolder-grid" style="display:none"></div>
+    <div id="image-grid" style="display:none"></div>
+    <div id="json-grid" style="display:none"></div>
+    <div id="guide-panel" style="display:none"></div>
+  </div>
+</main>
+
+<script>
+const USER = 'ninja0099';
+
+const REPOS = [
+  { id: 'img1',   label: 'img1'   },
+  { id: 'Badges', label: 'Badges' },
+];
+
+// Active repo — defaults to img1
+let activeRepo = REPOS[0];
+
+function repoBaseUrl(repo) {
+  return `https://${USER}.github.io/${repo.id}/`;
+}
+
+// Guide always loads from img1
+const GUIDE_BASE = `https://${USER}.github.io/img1/`;
+const GUIDE_URL  = `${GUIDE_BASE}scripts/guide.md?v=${Date.now()}`;
+
+const IMG_EXT = ['.jpg','.jpeg','.png','.gif','.webp','.webm','.svg','.avif','.mp4'];
+
+// ── MOBILE SIDEBAR ────────────────────────────────────────────────────────
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+// ── REPO SWITCHER ─────────────────────────────────────────────────────────
+function buildRepoSwitcher() {
+  const container = document.getElementById('repoSwitcher');
+  container.innerHTML = '';
+  REPOS.forEach(repo => {
+    const btn = document.createElement('button');
+    btn.className = 'repo-btn' + (repo.id === activeRepo.id ? ' active' : '');
+    btn.textContent = repo.label;
+    btn.addEventListener('click', () => {
+      if (repo.id === activeRepo.id) return;
+      activeRepo = repo;
+      // reset state
+      allImages = [];
+      folderMap = {};
+      allFolderKeys = [];
+      activeFolder = null;
+      searchQuery = '';
+      document.getElementById('searchInput').value = '';
+      document.getElementById('searchClear').style.display = 'none';
+      document.getElementById('stateMsg').innerHTML =
+        '<div class="spinner"></div><div>Loading your collection…</div>';
+      document.getElementById('stateMsg').style.display = 'flex';
+      document.getElementById('subfolder-grid').style.display = 'none';
+      document.getElementById('image-grid').style.display = 'none';
+      document.getElementById('json-grid').style.display = 'none';
+      document.getElementById('guide-panel').style.display = 'none';
+      document.getElementById('folderTree').innerHTML =
+        '<div class="tree-label">Loading…</div>';
+      buildRepoSwitcher();
+      init();
+    });
+    container.appendChild(btn);
+  });
+}
+
+// ── TYPE DETECTION ────────────────────────────────────────────────────────
+function detectTypeFromFolder(folderPath) {
+  if (folderPath === 'Anime-Focused' || folderPath.startsWith('Anime-Focused/')) return 'anime';
+  
+  const name = folderPath.split('/').pop().toLowerCase();
+  if (/gif/.test(name)) return 'gif';
+  if (/video|mp4|webm/.test(name)) return 'video';
+  if (/poster|movie|show|series|film/.test(name)) return 'poster';
+  if (/cover/.test(name)) return 'cover';
+  if (/background|bg|fanart/.test(name)) return 'background';
+  if (/logo|brand|icon/.test(name)) return 'logo';
+  if (/banner|header/.test(name)) return 'banner';
+  if (/backdrop/.test(name)) return 'backdrop';
+  return 'other';
+}
+
+// ── IS JSON FOLDER? ──
+// Returns true only for the top-level "json" folder (or subfolders inside it)
+// in the Badges repo
+function isJsonFolder(folderPath) {
+  return activeRepo.id === 'Badges' &&
+    (folderPath === 'json' || folderPath.startsWith('json/'));
+}
+
+function isParentFolder(folder, allFolderKeys) {
+  return allFolderKeys.some(f => f !== folder && f.startsWith(folder + '/'));
+}
+
+const TYPE_META = {
+  poster:     { label: 'Poster',     color: '#e5a00d' },
+  cover:      { label: 'Cover',      color: '#F9FF00' },
+  background: { label: 'Background', color: '#4a9eff' },
+  backdrop:   { label: 'Backdrop',   color: '#36ff51' },
+  logo:       { label: 'Logo',       color: '#a78bfa' },
+  banner:     { label: 'Banner',     color: '#34d399' },
+  gif:        { label: 'GIF',        color: '#ec4899' },
+  video:      { label: 'Video',      color: '#fb923c' },
+  json:       { label: 'JSON',       color: '#38bdf8' },
+  badge:      { label: 'Badge',      color: '#a3e635' },
+  other:      { label: 'Other',      color: '#f87171' },
+  anime:      { label: 'Anime',      color: '#ff6eb4' },
+};
+
+let allImages = [];
+let folderMap = {};
+let allFolderKeys = [];
+let activeFolder = null;
+let searchQuery = '';
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    const BASE_URL     = repoBaseUrl(activeRepo);
+    const MANIFEST_URL = `${BASE_URL}manifest.json?v=${Date.now()}`;
+
+    const res = await fetch(MANIFEST_URL);
+    if (!res.ok) throw new Error(`manifest.json not found (${res.status})`);
+    const files = await res.json();
+
+    allImages = files
+      .filter(f => {
+        const ext = f.slice(f.lastIndexOf('.')).toLowerCase();
+        // For Badges repo: allow .json only inside the json/ folder
+        if (ext === '.json') {
+          return activeRepo.id === 'Badges' && (f === 'json' || f.startsWith('json/'));
+        }
+        return IMG_EXT.includes(ext);
+      })
+      .map(f => {
+        const parts = f.split('/');
+        const name = parts[parts.length - 1];
+        const folder = parts.length > 1 ? parts.slice(0, -1).join('/') : '(root)';
+        // JSON files get type 'json', images use folder-based detection
+        const ext = name.slice(name.lastIndexOf('.')).toLowerCase();
+        const type = ext === '.json' ? 'json' : detectTypeFromFolder(folder);
+        return { path: f, url: BASE_URL + f, name, folder, type };
+      });
+
+    folderMap = {};
+    allImages.forEach(img => {
+      if (!folderMap[img.folder]) folderMap[img.folder] = [];
+      folderMap[img.folder].push(img);
+    });
+
+    const allFolderSet = new Set();
+    allImages.forEach(img => {
+      if (img.folder !== '(root)') {
+        const parts = img.folder.split('/');
+        let current = '';
+        parts.forEach(part => {
+          current = current ? current + '/' + part : part;
+          allFolderSet.add(current);
+        });
+      }
+    });
+    allFolderKeys = Array.from(allFolderSet).sort();
+
+    buildSidebar();
+    renderStats(allImages, null);
+    buildRepoSwitcher();
+
+    const uniqueFolders = new Set(allImages.map(img => img.folder));
+    document.getElementById('sidebarFooter').textContent =
+      `${allImages.length} files · ${uniqueFolders.size} folders`;
+
+    // ── HASH ROUTING — only for guide ──
+    if (window.location.hash === '#guide') {
+      showGuide();
+    } else {
+      const firstFolder = allFolderKeys[0];
+      if (firstFolder) selectFolder(firstFolder);
+    }
+
+  } catch(e) {
+    const msg = e.message.includes('manifest.json not found')
+      ? '⚠️ manifest.json missing. Run the workflow to generate it.'
+      : '⚠️ Failed to load. Check repo is public &amp; GitHub Pages is enabled.';
+    document.getElementById('stateMsg').innerHTML = `<div>${msg}</div>`;
+    document.getElementById('stateMsg').style.display = 'flex';
+  }
+}
+
+// Handle browser back/forward for hash changes
+window.addEventListener('hashchange', () => {
+  if (window.location.hash === '#guide') {
+    showGuide();
+  } else {
+    document.getElementById('guideBtn').classList.remove('active');
+    document.getElementById('guide-panel').style.display = 'none';
+    const firstFolder = allFolderKeys[0];
+    if (firstFolder) selectFolder(firstFolder);
+  }
+});
+
+// ── SIDEBAR ───────────────────────────────────────────────────────────────
+function buildSidebar() {
+  const tree = document.getElementById('folderTree');
+  tree.innerHTML = '';
+
+  const label = document.createElement('div');
+  label.className = 'tree-label';
+  label.textContent = 'Folders';
+  tree.appendChild(label);
+
+  allFolderKeys.forEach(folder => {
+    const depth = folder.split('/').length - 1;
+    const displayName = folder.split('/').pop();
+    const isParent = isParentFolder(folder, allFolderKeys);
+    const count = allImages.filter(img =>
+      img.folder === folder || img.folder.startsWith(folder + '/')
+    ).length;
+
+    if (count === 0) return;
+
+    // Dot color: json folders get json color, Badges non-json get badge color, img1 uses type color
+    let dotColor;
+    if (isJsonFolder(folder)) {
+      dotColor = TYPE_META.json.color;
+    } else if (activeRepo.id === 'Badges') {
+      dotColor = isParent ? '#555' : TYPE_META.badge.color;
+    } else if (activeRepo.id === 'img1' && !isParent) {
+      dotColor = TYPE_META[detectTypeFromFolder(folder)]?.color || '#555';
+    } else {
+      dotColor = '#555';
+    }
+
+    const el = document.createElement('div');
+    el.className = 'folder-item';
+    el.dataset.key = folder;
+    el.style.setProperty('--depth', depth);
+    el.innerHTML = `
+      <div class="type-dot" style="background:${dotColor}"></div>
+      <span class="folder-name">${displayName}</span>
+      <span class="folder-count">${count}</span>
+    `;
+    el.addEventListener('click', () => selectFolder(folder));
+    tree.appendChild(el);
+  });
+}
+
+function selectFolder(folder) {
+  activeFolder = folder;
+  searchQuery = '';
+  document.getElementById('searchInput').value = '';
+
+  // clear guide active state + hide guide panel
+  document.getElementById('guideBtn').classList.remove('active');
+  document.getElementById('guide-panel').style.display = 'none';
+
+  document.querySelectorAll('.folder-item').forEach(i => i.classList.remove('active'));
+  const el = document.querySelector(`.folder-item[data-key="${folder}"]`);
+  if (el) el.classList.add('active');
+
+  // clear hash if guide was open
+  if (window.location.hash === '#guide') {
+    history.replaceState(null, '', window.location.pathname);
+  }
+
+  // Close sidebar on mobile after selecting a folder
+  if (window.innerWidth <= 768) closeSidebar();
+
+  renderView();
+}
+
+// ── GUIDE ─────────────────────────────────────────────────────────────────
+let guideLoaded = false;
+
+function showGuide() {
+  if (window.location.hash !== '#guide') {
+    window.location.hash = 'guide';
+  }
+
+  document.title = 'Guide — Image Vault';
+
+  document.querySelectorAll('.folder-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('guideBtn').classList.add('active');
+
+  document.getElementById('breadcrumb').textContent = 'Guide';
+  document.getElementById('typeBadge').style.display = 'none';
+  document.getElementById('countPill').textContent = '';
+
+  document.getElementById('stateMsg').style.display = 'none';
+  document.getElementById('subfolder-grid').style.display = 'none';
+  const imgGrid = document.getElementById('image-grid');
+  imgGrid.style.display = 'none';
+  imgGrid.innerHTML = '';
+  document.getElementById('json-grid').style.display = 'none';
+  document.getElementById('json-grid').innerHTML = '';
+  document.getElementById('main').scrollTop = 0;
+  const mainEl = document.getElementById('main'); if(mainEl) mainEl.scrollTop = 0;
+
+  if (window.innerWidth <= 768) {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').style.display = 'none';
+  }
+
+  const panel = document.getElementById('guide-panel');
+  panel.style.display = 'block';
+
+  if (guideLoaded) return;
+
+  panel.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 0;gap:12px;color:var(--text-dim)"><div class="spinner"></div><div>Loading guide…</div></div>';
+
+  fetch(GUIDE_URL)
+    .then(r => { if (!r.ok) throw new Error('not found'); return r.text(); })
+    .then(md => {
+      panel.innerHTML = marked.parse(md);
+      guideLoaded = true;
+    })
+    .catch(() => {
+      panel.innerHTML = '<div style="padding:40px;color:var(--text-dim)">⚠️ Guide not found. Make sure <code>scripts/guide.md</code> exists in your repo.</div>';
+    });
+}
+
+// ── RENDER VIEW ───────────────────────────────────────────────────────────
+function renderView() {
+  const stateMsg   = document.getElementById('stateMsg');
+  const subGrid    = document.getElementById('subfolder-grid');
+  const imgGrid    = document.getElementById('image-grid');
+  const jsonGrid   = document.getElementById('json-grid');
+  const breadcrumb = document.getElementById('breadcrumb');
+  const badge      = document.getElementById('typeBadge');
+  const pill       = document.getElementById('countPill');
+
+  stateMsg.style.display = 'none';
+  subGrid.style.display  = 'none';
+  imgGrid.style.display  = 'none';
+  jsonGrid.style.display = 'none';
+  document.getElementById('guide-panel').style.display = 'none';
+  subGrid.innerHTML  = '';
+  imgGrid.innerHTML  = '';
+  jsonGrid.innerHTML = '';
+  document.getElementById('main').scrollTop = 0;
+
+  // ── SEARCH MODE ──
+  if (searchQuery) {
+    const normalise = s => s.toLowerCase().replace(/[-_]/g, ' ');
+    const q = normalise(searchQuery);
+    const results = allImages.filter(i => {
+      const name   = normalise(i.name.replace(/\.[^.]+$/, ''));
+      const folder = normalise(i.folder);
+      return name.includes(q) || folder.includes(q);
+    });
+    breadcrumb.innerHTML = `Search <span>for "${searchQuery}"</span>`;
+    badge.style.display = 'none';
+    pill.textContent = `${results.length} result${results.length !== 1 ? 's' : ''}`;
+
+    if (results.length === 0) {
+      stateMsg.innerHTML = '<div>No files found</div>';
+      stateMsg.style.display = 'flex';
+      return;
+    }
+
+    // Split results into images and json
+    const jsonResults = results.filter(i => i.type === 'json');
+    const imgResults  = results.filter(i => i.type !== 'json');
+
+    if (jsonResults.length > 0) {
+      jsonGrid.style.display = 'grid';
+      jsonResults
+        .slice().sort((a,b) => a.name.localeCompare(b.name, undefined, { numeric:true, sensitivity:'base' }))
+        .forEach(item => jsonGrid.appendChild(makeJsonCard(item)));
+    }
+    if (imgResults.length > 0) {
+      imgGrid.style.display = window.innerWidth <= 640 ? 'grid' : 'block';
+      imgResults
+        .slice().sort((a,b) => a.name.localeCompare(b.name, undefined, { numeric:true, sensitivity:'base' }))
+        .forEach(img => imgGrid.appendChild(makeImageCard(img)));
+    }
+    return;
+  }
+
+  if (!activeFolder) return;
+
+  const folderName = activeFolder.split('/').pop();
+  const isParent   = isParentFolder(activeFolder, allFolderKeys);
+  const totalCount = allImages.filter(img =>
+    img.folder === activeFolder || img.folder.startsWith(activeFolder + '/')
+  ).length;
+
+  breadcrumb.innerHTML = folderName;
+  pill.textContent = `${totalCount} file${totalCount !== 1 ? 's' : ''}`;
+
+  // ── PARENT FOLDER ──
+  if (isParent) {
+    badge.style.display = 'none';
+
+    const activeParts = activeFolder.split('/');
+    const children = allFolderKeys.filter(f => {
+      const parts = f.split('/');
+      return (
+        parts.length === activeParts.length + 1 &&
+        f.startsWith(activeFolder + '/')
+      );
+    });
+
+    subGrid.style.display = 'grid';
+    children.forEach((child) => {
+      const childName     = child.split('/').pop();
+      const childIsParent = isParentFolder(child, allFolderKeys);
+      const childCount    = allImages.filter(img =>
+        img.folder === child || img.folder.startsWith(child + '/')
+      ).length;
+
+      // Determine badge/color for child
+      const childIsJson   = isJsonFolder(child);
+      const childIsBadges = activeRepo.id === 'Badges' && !childIsJson;
+      const childType     = childIsJson ? 'json' : childIsBadges ? 'badge' : detectTypeFromFolder(child);
+      const childMeta     = TYPE_META[childType] || TYPE_META['other'];
+      const showTag       = !childIsParent && (activeRepo.id === 'img1' || childIsJson || childIsBadges);
+      const dotColor      = showTag ? childMeta.color : '#555';
+
+      const card = document.createElement('div');
+      card.className = 'subfolder-card';
+      card.innerHTML = `
+        <div class="subfolder-card-top">
+          <div class="subfolder-dot" style="background:${dotColor}"></div>
+          <div class="subfolder-name">${childName}</div>
+        </div>
+        <div class="subfolder-meta">
+          ${showTag
+            ? `<div class="subfolder-badge"
+                style="color:${childMeta.color};border-color:${childMeta.color}55;background:${childMeta.color}15">
+                ${childMeta.label}
+               </div>`
+            : '<div></div>'}
+          <div class="subfolder-count">${childCount} files</div>
+        </div>
+      `;
+      card.addEventListener('click', () => selectFolder(child));
+      subGrid.appendChild(card);
+    });
+
+  // ── LEAF FOLDER ──
+  } else {
+    const folderIsJson = isJsonFolder(activeFolder);
+    const items = (folderMap[activeFolder] || [])
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+
+    if (folderIsJson) {
+      // Show JSON type badge
+      badge.textContent       = 'JSON';
+      badge.style.display     = 'inline-block';
+      badge.style.color       = '#38bdf8';
+      badge.style.borderColor = 'rgba(56,189,248,0.35)';
+      badge.style.background  = 'rgba(56,189,248,0.1)';
+    } else if (activeRepo.id === 'Badges') {
+      // Badges repo non-json → always show Badge tag
+      badge.textContent       = 'Badge';
+      badge.style.display     = 'inline-block';
+      badge.style.color       = '#a3e635';
+      badge.style.borderColor = 'rgba(163,230,53,0.35)';
+      badge.style.background  = 'rgba(163,230,53,0.1)';
+    } else if (activeRepo.id === 'img1') {
+      const type = detectTypeFromFolder(activeFolder);
+      const meta = TYPE_META[type] || TYPE_META['other'];
+      badge.textContent       = meta.label;
+      badge.style.display     = 'inline-block';
+      badge.style.color       = meta.color;
+      badge.style.borderColor = meta.color + '55';
+      badge.style.background  = meta.color + '15';
+    } else {
+      badge.style.display = 'none';
+    }
+
+    if (items.length === 0) {
+      stateMsg.innerHTML = '<div>No files in this folder</div>';
+      stateMsg.style.display = 'flex';
+      return;
+    }
+
+    document.getElementById('main').scrollTop = 0;
+
+    if (folderIsJson) {
+      // Render JSON cards
+      jsonGrid.innerHTML = '';
+      jsonGrid.style.display = 'grid';
+      items.forEach(item => jsonGrid.appendChild(makeJsonCard(item)));
+    } else {
+      // Render image cards
+      imgGrid.innerHTML = '';
+      imgGrid.style.display = window.innerWidth <= 640 ? 'grid' : 'block';
+      items.forEach(img => imgGrid.appendChild(makeImageCard(img)));
+    }
+  }
+}
+
+// ── JSON CARD ─────────────────────────────────────────────────────────────
+function makeJsonCard(item) {
+  const card = document.createElement('div');
+  card.className = 'json-card';
+  const displayName = item.name.replace(/\.json$/i, '');
+
+  card.innerHTML = `
+    <div class="json-card-body">
+      <div class="json-card-top">
+        <div class="json-icon">{ }</div>
+        <div class="json-card-info">
+          <div class="json-card-name" title="${item.name}">${displayName}</div>
+          <span class="json-card-tag">JSON</span>
+        </div>
+      </div>
+    </div>
+    <div class="json-card-footer">
+      <div class="card-name" title="${item.name}">${item.name}</div>
+      <button class="json-view-btn" data-url="${item.url}">View</button>
+      <button class="copy-btn" data-url="${item.url}">Copy</button>
+    </div>
+  `;
+
+  // View — open raw JSON in new tab
+  card.querySelector('.json-view-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    window.open(e.currentTarget.dataset.url, '_blank');
+  });
+
+  // Copy URL
+  card.querySelector('.copy-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const btn = e.currentTarget;
+    navigator.clipboard.writeText(btn.dataset.url).then(() => {
+      btn.textContent = 'Copied';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    }).catch(() => {
+      btn.textContent = 'Failed';
+      setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+    });
+  });
+
+  return card;
+}
+
+// ── IMAGE CARD ────────────────────────────────────────────────────────────
+function makeImageCard(img) {
+  const meta = TYPE_META[img.type] || TYPE_META['other'];
+  const card = document.createElement('div');
+  card.className = `card type-${img.type}`;
+  const ext = img.name.toLowerCase().split('.').pop();
+  const isMp4  = ext === 'mp4';
+  const isWebm = ext === 'webm';
+  const isVideo = isMp4 || isWebm;
+
+  const tagLabel = isMp4 ? 'Video MP4' : isWebm ? 'Video WebM' : meta.label;
+  const tagColor = isMp4 ? '#fb923c' : isWebm ? '#38bdf8' : meta.color;
+
+  card.innerHTML = `
+    <div class="img-wrap">
+      ${isVideo
+        ? `<div style="width:100%;min-height:120px;background:#0d0d0d;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+             <svg width="40" height="40" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)"><path d="M8 5v14l11-7z"/></svg>
+           </div>`
+        : `<img src="${img.url}" alt="${img.name}" loading="lazy"
+             onerror="this.parentElement.style.background='#1e1e1e';this.style.display='none'">`
+      }
+      ${activeRepo.id === 'img1'
+        ? `<div class="type-tag" style="color:${tagColor}">
+        <div class="type-dot" style="background:${tagColor}"></div>
+        ${tagLabel}
+      </div>`
+        : activeRepo.id === 'Badges'
+          ? `<div class="type-tag" style="color:#a3e635">
+        <div class="type-dot" style="background:#a3e635"></div>
+        Badge
+      </div>`
+          : ''
+      }
+    </div>
+    <div class="card-footer">
+      <div class="card-name" title="${img.name}">${img.name.replace(/\.[^.]+$/, '')}</div>
+      <button class="copy-btn" data-url="${img.url}">Copy</button>
+    </div>
+  `;
+
+  card.addEventListener('click', (e) => {
+    if (e.target.closest('.card-footer')) return;
+    window.open(img.url, '_blank');
+  });
+
+  card.querySelector('.copy-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const btn = e.currentTarget;
+    navigator.clipboard.writeText(btn.dataset.url).then(() => {
+      btn.textContent = 'Copied';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    }).catch(() => {
+      btn.textContent = 'Failed';
+      setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+    });
+  });
+
+  return card;
+}
+
+// ── SEARCH ────────────────────────────────────────────────────────────────
+const searchInput  = document.getElementById('searchInput');
+const searchClear  = document.getElementById('searchClear');
+
+function clearSearch() {
+  searchInput.value = '';
+  searchQuery = '';
+  searchClear.style.display = 'none';
+  document.querySelectorAll('.folder-item').forEach(i => i.classList.remove('active'));
+  document.querySelector(`.folder-item[data-key="${activeFolder}"]`)?.classList.add('active');
+  renderView();
+}
+
+searchInput.addEventListener('input', e => {
+  searchQuery = e.target.value.trim();
+  searchClear.style.display = searchQuery ? 'flex' : 'none';
+  if (!searchQuery) {
+    document.querySelectorAll('.folder-item').forEach(i => i.classList.remove('active'));
+    document.querySelector(`.folder-item[data-key="${activeFolder}"]`)?.classList.add('active');
+  } else {
+    document.querySelectorAll('.folder-item').forEach(i => i.classList.remove('active'));
+  }
+  renderView();
+});
+
+searchClear.addEventListener('click', () => {
+  clearSearch();
+  searchInput.focus();
+});
+
+// ── KEYBOARD SHORTCUTS ────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  const tag = document.activeElement.tagName.toLowerCase();
+  const isTyping = tag === 'input' || tag === 'textarea';
+
+  if (e.key === '/' && !isTyping) {
+    e.preventDefault();
+    searchInput.focus();
+    searchInput.select();
+  }
+
+  if (e.key === 'Escape') {
+    if (searchQuery) {
+      clearSearch();
+    } else {
+      searchInput.blur();
+    }
+  }
+});
+
+buildRepoSwitcher();
+init();
+</script>
+</body>
+</html>
