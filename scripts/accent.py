@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+#kept for reference, not called at runtime
 """
 Derive one accent color from a collection cover image.
 
