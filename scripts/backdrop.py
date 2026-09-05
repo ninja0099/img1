@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+#kept for reference, not called at runtime
 """
 Backdrop generator driven entirely by explicit TMDB request parameters.
 
